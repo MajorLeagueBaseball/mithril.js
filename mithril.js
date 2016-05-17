@@ -1176,7 +1176,41 @@
 				$document.createRange().createContextualFragment(data))
 		} catch (e) {
 			parentElement.insertAdjacentHTML("beforeend", data)
+			replaceScriptNodes(parentElement)
 		}
+	}
+
+	// Replace script tags inside given DOM element with executable ones.
+	// Adapted from http://stackoverflow.com/a/20584396
+	function replaceScriptNodes(node) {
+		// If script node, replace with executable version
+		if (node.tagName === "SCRIPT") {
+			node.parentNode.replaceChild(buildExecutableNode(node), node)
+		} else {
+			// Otherwise, check children
+			var children = node.childNodes
+			if (children && children.length) {
+				for (var i = 0; i < children.length; i++) {
+					replaceScriptNodes(children[i])
+				}
+			}
+		}
+
+		// Return modified fragment
+		return node
+	}
+
+	// Replace script element with one whose contents are executable.
+	function buildExecutableNode(node){
+		var scriptEl = document.createElement("script")
+		var attrs = node.attributes
+
+		for (var i = 0; i < attrs.length; i++) {
+			scriptEl.setAttribute(attrs[i].name, attrs[i].value)
+		}
+
+		scriptEl.text = node.innerHTML
+		return scriptEl
 	}
 
 	function injectHTML(parentElement, index, data) {
